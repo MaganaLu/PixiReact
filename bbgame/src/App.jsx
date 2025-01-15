@@ -61,7 +61,7 @@ const App = () => {
   return (
     <Stage width={800} height={600} options={{ background: 0x1099bb }}>
       
-      {/* world container, no need for pivot or complex logic */}
+      {/* world container //TO DO: conditionally update container based on collision data fro doorts */}
       <Container> 
         
         {/* Static Image as Background */}
