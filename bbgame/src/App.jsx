@@ -1,5 +1,5 @@
 import './App.css';
-import { useMemo, useCallback, useState } from 'react';
+import { useMemo, useCallback, useState, useRef, useEffect } from 'react';
 import { BlurFilter, Texture } from 'pixi.js';
 import { Graphics, Stage, Container, Sprite } from '@pixi/react';
 import MainCharacter from './components/MainCharacter';
@@ -8,10 +8,11 @@ import dungeonTest from './assets/MapTextures/dungeonTest.jpeg';
 // Main Application Component
 const App = () => {
   const [isColliding, setIsColliding] = useState(false);
-  
+  const [playerPosition, setPlayerPosition] = useState({ x: 400, y: 300 }); // Player position state
+
+  const cameraRef = useRef(null); // Reference to the camera container
   const backgroundTexture = Texture.from(dungeonTest);
 
-  // The drawing callback for Graphics component
   const draw = useCallback((g) => {
     g.clear();
     g.beginFill(0xff3300);
@@ -34,16 +35,13 @@ const App = () => {
     g.endFill();
   }, []);
 
-  // Collision check logic
   const checkCollision = (characterBounds) => {
-    // Here we define our "collision zones" based on Graphics' bounds
     const collisionZones = [
-      { x: 50, y: 150, width: 120, height: 120 }, // Rectangle
-      { x: 150, y: 100, width: 300, height: 100 }, // Rounded Rectangle
-      { x: 470, y: 90, width: 60, height: 60 } // Circle
+      { x: 50, y: 150, width: 120, height: 120 },
+      { x: 150, y: 100, width: 300, height: 100 },
+      { x: 470, y: 90, width: 60, height: 60 }
     ];
 
-    // Check if the character's bounds intersect with any of the collision zones
     for (let zone of collisionZones) {
       if (
         characterBounds.x < zone.x + zone.width &&
@@ -58,9 +56,46 @@ const App = () => {
     return false; // No collision
   };
 
+  // Player movement logic
+  const handleKeyDown = (e) => {
+    const speed = 5;
+    switch (e.key) {
+      case 'w':
+        setPlayerPosition((prev) => ({ ...prev, y: prev.y - speed }));
+        break;
+      case 's':
+        setPlayerPosition((prev) => ({ ...prev, y: prev.y + speed }));
+        break;
+      case 'a':
+        setPlayerPosition((prev) => ({ ...prev, x: prev.x - speed }));
+        break;
+      case 'd':
+        setPlayerPosition((prev) => ({ ...prev, x: prev.x + speed }));
+        break;
+      default:
+        break;
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Camera follows the player position
+  useEffect(() => {
+    console.log("redraw");
+    if (cameraRef.current) {
+      cameraRef.current.position.set(playerPosition.x, playerPosition.y);
+    }
+  }, [playerPosition]);
+
   return (
     <Stage width={800} height={600} options={{ background: 0x1099bb }}>
-      <Container>
+      
+      {/* world ** these calues will ** find a wy to modify this vlaue from when the atacvater moves, this is state taht is flo8d  the the miancharacvter compoenent, this logic needs to bne manage din the*/}
+      <Container pivot={{x: 100, y: 130}}> 
+        
         {/* Static Image as Background */}
         <Sprite texture={backgroundTexture} x={0} y={0} />
 
@@ -68,7 +103,7 @@ const App = () => {
         <Graphics draw={draw} />
 
         {/* Main Character */}
-        <MainCharacter checkCollision={checkCollision} setIsColliding={setIsColliding} />
+        <MainCharacter characterPosition={playerPosition} checkCollision={checkCollision} setIsColliding={setIsColliding} />
         
         
       </Container>

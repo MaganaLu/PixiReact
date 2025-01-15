@@ -1,21 +1,21 @@
 import { AnimatedSprite } from "@pixi/react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Texture } from "pixi.js";
 
-const MainCharacter = ({checkCollision, setIsColliding}) => {
+const MainCharacter = ({ checkCollision, setIsColliding }) => {
   const bunnyUrl = 'https://pixijs.io/pixi-react/img/bunny.png';
+  const characterRef = useRef(null); // PixiJS ref to directly control position
 
   const [textures, setTextures] = useState([]);
-  const [characterPosition, setCharacterPosition] = useState({ x: 100, y: 100 });
-  const [keys, setKeys] = useState({ up: false, down: false, left: false, right: false });
-  const characterRef = useRef(null);
+  
+  // Store key press states in a ref so they don't trigger re-renders
+  const keys = useRef({ up: false, down: false, left: false, right: false });
 
   const speed = 5; // Speed of the character
 
   // Load the texture for the character
   useEffect(() => {
     const loadTextures = async () => {
-      console.log("Loading textures...");
       const loadedTextures = [Texture.from(bunnyUrl), Texture.from(bunnyUrl)];
       setTextures(loadedTextures);
     };
@@ -33,19 +33,19 @@ const MainCharacter = ({checkCollision, setIsColliding}) => {
       switch (event.key) {
         case 'ArrowUp':
         case 'w':
-          setKeys((prevState) => ({ ...prevState, up: true }));
+          keys.current.up = true;
           break;
         case 'ArrowDown':
         case 's':
-          setKeys((prevState) => ({ ...prevState, down: true }));
+          keys.current.down = true;
           break;
         case 'ArrowLeft':
         case 'a':
-          setKeys((prevState) => ({ ...prevState, left: true }));
+          keys.current.left = true;
           break;
         case 'ArrowRight':
         case 'd':
-          setKeys((prevState) => ({ ...prevState, right: true }));
+          keys.current.right = true;
           break;
         default:
           break;
@@ -56,19 +56,19 @@ const MainCharacter = ({checkCollision, setIsColliding}) => {
       switch (event.key) {
         case 'ArrowUp':
         case 'w':
-          setKeys((prevState) => ({ ...prevState, up: false }));
+          keys.current.up = false;
           break;
         case 'ArrowDown':
         case 's':
-          setKeys((prevState) => ({ ...prevState, down: false }));
+          keys.current.down = false;
           break;
         case 'ArrowLeft':
         case 'a':
-          setKeys((prevState) => ({ ...prevState, left: false }));
+          keys.current.left = false;
           break;
         case 'ArrowRight':
         case 'd':
-          setKeys((prevState) => ({ ...prevState, right: false }));
+          keys.current.right = false;
           break;
         default:
           break;
@@ -86,32 +86,34 @@ const MainCharacter = ({checkCollision, setIsColliding}) => {
     };
   }, []); // Only run once on mount
 
-  // Update the character position based on the key states
+  // Update the character position based on key presses
   useEffect(() => {
-    const updatePosition = () => {
-      const { up, down, left, right } = keys;
+    const moveCharacter = () => {
+      const character = characterRef.current;
+      if (character) {
+        const { up, down, left, right } = keys.current;
 
-      let newX = characterPosition.x;
-      let newY = characterPosition.y;
+        let newX = character.x;
+        let newY = character.y;
 
-      // Move the character based on pressed keys
-      if (up) newY -= speed;
-      if (down) newY += speed;
-      if (left) newX -= speed;
-      if (right) newX += speed;
+        // Move the character based on pressed keys
+        if (up) newY -= speed;
+        if (down) newY += speed;
+        if (left) newX -= speed;
+        if (right) newX += speed;
 
-      // Update the position if it has changed
-      if (newX !== characterPosition.x || newY !== characterPosition.y) {
-        setCharacterPosition({ x: newX, y: newY });
+        // Only update position if it has changed
+        if (newX !== character.x || newY !== character.y) {
+          character.x = newX;
+          character.y = newY;
+        }
       }
     };
 
-    // Set up a simple game loop for continuous movement
-    const interval = setInterval(updatePosition, 16); // ~60fps
+    const interval = setInterval(moveCharacter, 16); // ~60fps
 
-    // Cleanup interval when the component unmounts
-    return () => clearInterval(interval);
-  }, [keys, characterPosition]); // Re-run only when keys or position change
+    return () => clearInterval(interval); // Cleanup interval
+  }, []); // Only run once on mount
 
   if (textures.length === 0) {
     return null; // Optionally show a loading message while textures are being loaded
@@ -124,8 +126,8 @@ const MainCharacter = ({checkCollision, setIsColliding}) => {
       isPlaying={true}
       animationSpeed={0.1}
       loop={true}
-      x={characterPosition.x}
-      y={characterPosition.y}
+      x={100} // Initial position
+      y={100} // Initial position
     />
   );
 };
