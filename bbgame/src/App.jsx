@@ -1,7 +1,7 @@
 import './App.css';
 import { useMemo, useCallback, useState } from 'react';
 import { Texture } from 'pixi.js';
-import { Graphics, Stage, Container, Sprite } from '@pixi/react';
+import { Graphics, Stage, Container, Sprite, useTick } from '@pixi/react';
 import MainCharacter from './components/MainCharacter';
 import dungeonTest from './assets/MapTextures/dungeonTest.jpeg';
 
@@ -34,7 +34,7 @@ const App = () => {
     g.endFill();
   }, []);
 
-  // Collision check logic
+  // Collision check logic TODO: change to maincharcatert instead of passing 
   const checkCollision = (characterBounds) => {
     // Here we define our "collision zones" based on Graphics' bounds
     const collisionZones = [
@@ -51,12 +51,15 @@ const App = () => {
         characterBounds.y < zone.y + zone.height &&
         characterBounds.y + characterBounds.height > zone.y
       ) {
+        console.log("Collision detected");
         return true; // Collision detected
       }
     }
 
     return false; // No collision
   };
+
+
 
   return (
     <Stage width={800} height={600} options={{ background: 0x1099bb }}>

@@ -1,4 +1,4 @@
-import { AnimatedSprite } from "@pixi/react";
+import { AnimatedSprite, useTick } from "@pixi/react";
 import { useEffect, useRef, useState } from "react";
 import { Texture } from "pixi.js";
 
@@ -21,6 +21,7 @@ const MainCharacter = ({ checkCollision, setIsColliding }) => {
     };
 
     loadTextures(); // Async operation to load textures
+    console.log("Component mounted");
 
     return () => {
       console.log("Component unmounted or cleanup");
@@ -86,34 +87,28 @@ const MainCharacter = ({ checkCollision, setIsColliding }) => {
     };
   }, []); // Only run once on mount
 
-  // Update the character position based on key presses
-  useEffect(() => {
-    const moveCharacter = () => {
-      const character = characterRef.current;
-      if (character) {
-        const { up, down, left, right } = keys.current;
+  // Update the character position based on key presses using useTick
+  useTick(() => {
+    const character = characterRef.current;
+    if (character) {
+      const { up, down, left, right } = keys.current;
 
-        let newX = character.x;
-        let newY = character.y;
+      let newX = character.x;
+      let newY = character.y;
 
-        // Move the character based on pressed keys
-        if (up) newY -= speed;
-        if (down) newY += speed;
-        if (left) newX -= speed;
-        if (right) newX += speed;
+      // Move the character based on pressed keys
+      if (up) newY -= speed;
+      if (down) newY += speed;
+      if (left) newX -= speed;
+      if (right) newX += speed;
 
-        // Only update position if it has changed
-        if (newX !== character.x || newY !== character.y) {
-          character.x = newX;
-          character.y = newY;
-        }
+      // Only update position if it has changed
+      if (newX !== character.x || newY !== character.y) {
+        character.x = newX;
+        character.y = newY;
       }
-    };
-
-    const interval = setInterval(moveCharacter, 16); // ~60fps
-
-    return () => clearInterval(interval); // Cleanup interval
-  }, []); // Only run once on mount
+    }
+  });
 
   if (textures.length === 0) {
     return null; // Optionally show a loading message while textures are being loaded
